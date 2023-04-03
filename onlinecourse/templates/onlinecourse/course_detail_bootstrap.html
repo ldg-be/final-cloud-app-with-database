@@ -58,7 +58,7 @@
             <div id="exam" class="collapse">
                 <h2>Course Exam</h2>
                 
-                    <form action="{% url 'onlinecourse:registration' %}" method="post">
+                    <form action="{% url 'onlinecourse:submit' course.id %}" method="post">
                     {% csrf_token %}
                     {% for question in course.question_set.all %}
                         <div class="container-fluid">
@@ -70,7 +70,7 @@
                                 {% for choice in question.choice_set.all %}
                                 <div class="form-group">
                                     <div class="checkbox">
-                                    <label><input type="checkbox" name="choice"/>{{choice.text}}</label>
+                                    <label><input type="checkbox" name="choice_question{{question.id}}" value="{{choice.id}}"/>{{choice.text}}</label>
                                     </div>
                                     {% endfor %}
                                 </div>

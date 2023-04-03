@@ -33,7 +33,7 @@ class QuestionAdmin(admin.ModelAdmin):
     list_display = ['lesson', 'text','grade']
 
 class ChoiceAdmin(admin.ModelAdmin):
-    list_display = ['question','text','correct']
+    list_display = ['question','text','is_correct']
 
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Lesson, LessonAdmin)

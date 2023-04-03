@@ -1,7 +1,8 @@
+import sys
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 # <HINT> Import any new Models here
-from .models import Course, Enrollment
+from .models import Course, Enrollment,Question, Choice, Submission
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
@@ -70,6 +71,7 @@ def check_if_enrolled(user, course):
     return is_enrolled
 
 
+
 # CourseListView
 class CourseListView(generic.ListView):
     template_name = 'onlinecourse/course_list_bootstrap.html'
@@ -110,19 +112,27 @@ def enroll(request, course_id):
          # Collect the selected choices from exam form
          # Add each selected choice object to the submission object
          # Redirect to show_exam_result with the submission id
-#def submit(request, course_id):
+def extract_answers(request):
+    submitted_anwsers = []
+    print(request.POST, file=sys.stderr)
+    for key in request.POST:
+        if key.startswith('choice'):
+            value = request.POST.getlist(key)
+            submitted_anwsers = [int(x) for x in value]
+    return submitted_anwsers
 
-
-# <HINT> A example method to collect the selected choices from the exam form from the request object
-#def extract_answers(request):
-#    submitted_anwsers = []
-#    for key in request.POST:
-#        if key.startswith('choice'):
-#            value = request.POST[key]
-#            choice_id = int(value)
-#            submitted_anwsers.append(choice_id)
-#    return submitted_anwsers
-
+def submit(request, course_id):
+    username = request.user
+    course = get_object_or_404(Course, pk=course_id)
+    enrolled = Enrollment.objects.get(user=username,course=course)
+    print(extract_answers(request),file=sys.stderr)
+    submission = Submission.objects.create(enrollment=enrolled)
+    choice_list = Choice.objects.filter(id__in=extract_answers(request))
+    print(choice_list,file=sys.stderr)
+    submission.choices.set(choice_list)
+    submission_id = submission.id
+    print(submission_id,file=sys.stderr)
+    return redirect('onlinecourse:results', course_id=course_id, submission_id=submission_id)
 
 # <HINT> Create an exam result view to check if learner passed exam and show their question results and result for each question,
 # you may implement it based on the following logic:
@@ -130,7 +140,21 @@ def enroll(request, course_id):
         # Get the selected choice ids from the submission record
         # For each selected choice, check if it is a correct answer or not
         # Calculate the total score
-#def show_exam_result(request, course_id, submission_id):
+def show_exam_result(request, course_id, submission_id):
+    context = {}
+    course = get_object_or_404(Course, pk=course_id)
+    submission = get_object_or_404(Submission, pk=submission_id)
+    selected_ids = submission.choices
+    print(selected_ids, file=sys.stderr)
+    questions = Question.objects.filter(lesson= course)
+    for question in questions:
+        question.is_get_score(selected_ids)
+
+    context['course'] = course
+    context['selected_ids'] = selected_ids
+    context['grade'] = len(selected_ids)*100
+    return render(request, 'onlinecourse/user_login_bootstrap.html', context)
+
 
 
 
