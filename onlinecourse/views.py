@@ -155,9 +155,9 @@ def show_exam_result(request, course_id, submission_id):
         if question.is_get_score(answers):
             points += question.grade
         print(points)
-        
+
     context['course'] = course
-    context['selected_ids'] = answers
+    context['choices'] = answers
     context['submission'] = submission
     context['points'] = points
     context['total'] = total

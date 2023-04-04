@@ -50,6 +50,8 @@
                     </div>
                 {% endfor %}
             </div>
+        </div>
+        <br>
             <!-- Task: show questions and choices -->
             <!-- <HINT> Use Bootstrap Collapse to hide exam first, more details could be found here
             https://www.w3schools.com/bootstrap4/bootstrap_collapse.asp-->
@@ -60,26 +62,23 @@
                 
                     <form action="{% url 'onlinecourse:submit' course.id %}" method="post">
                     {% csrf_token %}
+                    <div class="card-columns-vertical">
                     {% for question in course.question_set.all %}
-                        <div class="container-fluid">
-                            {{question.text}}
-                        </div>
-                        
-                        <div class="container-fluid"> 
-                                <hr>
+                    <div class="card mt-1">
+                        <div class="card-header"><h5>{{question.text}}</h5></div>
+                        <div class="card-body"> 
                                 {% for choice in question.choice_set.all %}
                                 <div class="form-group">
                                     <div class="checkbox">
-                                    <label><input type="checkbox" name="choice_question{{choice.id}}" value="{{choice.id}}"/>{{choice.text}}</label>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
+                                    <label><input type="checkbox" name="choice_question{{choice.id}}" value="{{choice.id}}"/>  {{choice.text}}</label>
+                                </div></div>
+                                {% endfor %}
+                                
+                            </div></div>
                     {% endfor %}
+                        </div>
                             {% if message %}
-                                <div class="alert alert-warning"> 
-                                        {{ message }}
-                                </div
+                                <div class="alert alert-warning"> {{ message }}</div>
                             {% endif %}
                             <button class="btn btn-primary" type="submit">Submit</button>
                         </form>
