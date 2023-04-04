@@ -114,20 +114,19 @@ def enroll(request, course_id):
          # Redirect to show_exam_result with the submission id
 def extract_answers(request):
     submitted_anwsers = []
-    print(request.POST, file=sys.stderr)
     for key in request.POST:
         if key.startswith('choice'):
-            value = request.POST.getlist(key)
-            submitted_anwsers = [int(x) for x in value]
+            choice_id = request.POST[key]
+            submitted_anwsers.append(Choice.objects.get(id=choice_id))
     return submitted_anwsers
 
 def submit(request, course_id):
     username = request.user
     course = get_object_or_404(Course, pk=course_id)
     enrolled = Enrollment.objects.get(user=username,course=course)
-    print(extract_answers(request),file=sys.stderr)
+    
     submission = Submission.objects.create(enrollment=enrolled)
-    choice_list = Choice.objects.filter(id__in=extract_answers(request))
+    choice_list = answers = extract_answers(request)    
     print(choice_list,file=sys.stderr)
     submission.choices.set(choice_list)
     submission_id = submission.id
@@ -144,16 +143,26 @@ def show_exam_result(request, course_id, submission_id):
     context = {}
     course = get_object_or_404(Course, pk=course_id)
     submission = get_object_or_404(Submission, pk=submission_id)
-    selected_ids = submission.choices
-    print(selected_ids, file=sys.stderr)
+    answers = submission.choices.all()
+    print(answers, file=sys.stderr)
+
+    total, points = 0,0
     questions = Question.objects.filter(lesson= course)
     for question in questions:
-        question.is_get_score(selected_ids)
-
+        print(question.text)
+        print(question.grade)
+        total += question.grade
+        if question.is_get_score(answers):
+            points += question.grade
+        print(points)
+        
     context['course'] = course
-    context['selected_ids'] = selected_ids
-    context['grade'] = len(selected_ids)*100
-    return render(request, 'onlinecourse/user_login_bootstrap.html', context)
+    context['selected_ids'] = answers
+    context['submission'] = submission
+    context['points'] = points
+    context['total'] = total
+    context['grade'] = int((points / total) * 100)
+    return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
 
 
 
